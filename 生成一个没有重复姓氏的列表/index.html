@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>机试</title>
+</head>
+
+
+<script>
+  /** 
+   * 要求 :
+   * 1. 页面默认展示一个按钮，按钮填充文字为："生成一个没有重复姓氏的列表";
+   * 2. 点击[生成一个没有重复姓氏的列表]按钮，页面展示一个带有序号（序号从1开始）、姓氏和年龄（年龄取50-80随机数，且不重复）的列表，列表数据根据年龄排序，且按钮消失，
+   *    每行例如：
+   *      1. 我姓赵，今年50岁
+   *      2. 我姓钱，今年51岁
+   *      ...
+   * 3. 双击任意一行，年龄变成可编辑（年龄不允许出现小数），列的最后出现确认按钮，修改后点击确认按钮，列表重新根据年龄字段排序（其中展示按照要求2）。
+  */
+
+  class TestJs {
+    #firstNameList = ['赵', '钱', '孙', '李', '周', '吴', '郑', '王', '冯', '陈', '褚', '卫', '蒋', '沈', '韩', '杨', '朱', '秦', '尤', '许', '何', '吕', '施', '张', '周', '吴', '郑', '王', '冯', '陈', '褚'];
+    // 请在 TestJs 里编写
+    OL_DOM_SELECTOR = '___OL_DOM_SELECTOR';
+    EDIT_DOM_SELECTOR = '___EDIT_DOM_SELECTOR';
+    NOT_EDIT_DOM_SELECTOR = '___NOT_EDIT_DOM_SELECTOR';
+
+    constructor() {
+      this.NameAgeList = [];
+      this.initButton();
+    }
+
+
+    initButton(){
+      const btn = document.createElement('button');
+      btn.textContent = '生成一个没有重复姓氏的列表';
+
+      btn.addEventListener('click', ()=>{
+        this.NameAgeList = Array.from(new Set(this.#firstNameList)).map(i=>({firstName: i, age: Math.floor(Math.random()*31+50)}));
+        this.sort();
+
+
+        btn.remove();
+        this.renderList();
+      })
+      document.body.appendChild(btn);
+    }
+
+    sort(){
+      this.NameAgeList.sort((a,b)=>a.age-b.age);
+    }
+
+    validAge(age){
+      if(!Number.isInteger(age)){
+        return false;
+      }
+      if(age>80 || age<50){
+        return false;
+      }
+      return true; 
+    }
+    
+    renderList(){
+      let ol = document.getElementById(this.OL_DOM_SELECTOR);
+      if(ol){
+        ol.remove();
+      }
+
+
+      ol = document.createElement('ul');
+      ol.id = this.OL_DOM_SELECTOR;
+      ol.style.listStyleType = 'decimal';
+      
+      
+      this.NameAgeList.forEach((i,idx)=>{
+        const li = document.createElement('li');
+        const liTextNode = document.createElement('text');
+        const liTextNodeAge = document.createElement('text');
+        const liInputNodeAge = document.createElement('input');
+        const liTextNode3 = document.createElement('text');
+        const submitBtn = document.createElement('button');
+        liTextNode.textContent = `我姓${i.firstName},今年`;
+        liTextNodeAge.textContent = `${i.age}`;
+        liInputNodeAge.type = 'number';
+        liInputNodeAge.step = 1;
+        liInputNodeAge.max = 80;
+        liInputNodeAge.min = 50;
+        liInputNodeAge.value = i.age;
+        liInputNodeAge.style.cssText = `
+          width: 60px;
+        `;
+        liTextNode3.textContent = `岁`;
+        submitBtn.textContent = '确认';
+        
+        [liInputNodeAge, submitBtn].forEach(el=>{
+          el.className = this.EDIT_DOM_SELECTOR;
+          el.style.display = 'none';
+        });
+        liTextNodeAge.className = this.NOT_EDIT_DOM_SELECTOR;
+
+        li.dataset.idx = idx;
+        const that = this;
+        submitBtn.addEventListener('click',function(){
+          const inputIdx = this.closest('li').dataset.idx;
+          const inputAge = this.closest('li').querySelector('input').value;
+          console.log('inputIdx', inputIdx, inputAge);
+
+          if(!that.validAge(Number(inputAge))){
+            alert('请输入50至80之间的整数。')
+            return false;
+          }
+          that.NameAgeList.splice(inputIdx, 1, {
+            firstName: that.NameAgeList[inputIdx].firstName,
+            age: inputAge
+          });
+
+          that.sort();
+          that.renderList();
+        });
+
+        li.appendChild(liTextNode);
+        li.appendChild(liTextNodeAge);
+        li.appendChild(liInputNodeAge);
+        li.appendChild(liTextNode3);
+        li.appendChild(submitBtn);
+
+
+        li.style.cssText=`
+          margin-bottom: 10px;
+        `;
+
+        li.addEventListener('dblclick', function(){
+          console.log(this)
+          this.querySelectorAll(`.${that.EDIT_DOM_SELECTOR}`).forEach(el=>el.style.display='inline-block')
+          this.querySelectorAll(`.${that.NOT_EDIT_DOM_SELECTOR}`).forEach(el=>el.style.display='none')
+        });
+
+        ol.appendChild(li);
+      });
+      document.body.appendChild(ol)
+    }
+
+  }
+
+  window.onload = ()=>{
+    new TestJs();
+  }
+</script>
+
+</html>
